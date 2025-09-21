@@ -14,6 +14,19 @@ async function seed() {
   await mongoose.connect(process.env.MONGO_URI);
   console.log("Connected to MongoDB");
 
+  console.log("Dropping existing drivers collection to remove old indexes...");
+  try {
+    await mongoose.connection.collections.drivers.drop();
+    console.log("Drivers collection dropped.");
+  } catch (error) {
+    if (error.code === 26) {
+      console.log("Drivers collection did not exist, skipping drop.");
+    } else {
+      // For any other error, we should probably stop the script
+      throw error;
+    }
+  }
+
   console.log("Clearing existing data...");
   await Driver.deleteMany({});
   await Route.deleteMany({});
@@ -99,35 +112,43 @@ async function seed() {
   await Driver.insertMany(
     drivers.map((d) => ({
       name: d.name,
-      currentShiftHours: Number(d.currentShiftHours || 0),
-      past7DayHours: (d.past7DayHours || "")
+      currentShiftHours: Number(d.shift_hours || 0),
+      past7DayHours: (d.past_week_hours || "")
         .split("|")
         .filter(Boolean)
         .map(Number),
       email: d.email,
-      isActive: d.isActive === "true",
+      // isActive: d.isActive === "true", // Removed this line
     }))
   );
 
   await Route.insertMany(
     routes.map((r) => ({
-      routeId: r.routeId,
-      distanceKm: Number(r.distanceKm),
-      trafficLevel: r.trafficLevel,
-      baseTimeMinutes: Number(r.baseTime),
+      routeId: r.route_id,
+      distanceKm: Number(r.distance_km),
+      trafficLevel: r.traffic_level,
+      baseTimeMinutes: Number(r.base_time_min),
     }))
   );
 
   await Order.insertMany(
-    orders.map((o) => ({
-      orderId: o.orderId,
-      valueRs: Number(o.value_rs),
-      assignedRouteId: o.assigned_route,
-      deliveryTimestamp: o.delivery_timestamp
-        ? new Date(o.delivery_timestamp)
-        : null,
-      status: o.status || "Pending",
-    }))
+    orders.map((o) => {
+      let deliveryTimestamp = null;
+      if (o.delivery_time) {
+        const today = new Date();
+        const [hours, minutes] = o.delivery_time.split(':').map(Number);
+        // Set the time from the CSV on today's date
+        today.setHours(hours, minutes, 0, 0);
+        deliveryTimestamp = today;
+      }
+      return {
+        orderId: o.order_id,
+        valueRs: Number(o.value_rs),
+        assignedRouteId: o.route_id,
+        deliveryTimestamp: deliveryTimestamp,
+        status: o.status || "Pending",
+      };
+    })
   );
 
   console.log("Seed complete");

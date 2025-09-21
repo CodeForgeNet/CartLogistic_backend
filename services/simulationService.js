@@ -74,9 +74,6 @@ function calculateSimulation(drivers, routes, orders, params) {
     fuelCostBreakdown[route.trafficLevel] += fuelCost;
 
     const orderProfit = order.valueRs + bonus - penalty - fuelCost;
-    totalProfit += order;
-    // services/simulationService.js (continued)
-    const orderProfit = order.valueRs + bonus - penalty - fuelCost;
     totalProfit += orderProfit;
 
     // assign minutes to driver (round up)

@@ -4,7 +4,7 @@ const driverSchema = new mongoose.Schema({
   name: { type: String, required: true },
   currentShiftHours: { type: Number, default: 0 },
   past7DayHours: { type: [Number], default: [] },
-  email: { type: String, required: true, unique: true },
+  email: { type: String, required: false, unique: false },
   isActive: { type: Boolean, default: true }
 });
 
