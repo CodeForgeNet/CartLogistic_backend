@@ -3,16 +3,16 @@
 
 | :clock10: Start time | :hourglass: Duration |
 | --- | ---: |
-|9/22/2025, 2:20:55 AM|0.208 s|
+|9/22/2025, 2:24:42 AM|0.142 s|
 
 | | :white_check_mark: Passed | :x: Failed | :construction: Todo | :white_circle: Total |
 | --- | ---: | ---: | ---:| ---: |
 |Test Suites|1|0|-|1|
 |Tests|7|0|0|7|
 
-## tests/simulationService.test.js [[link](https://github.com/CodeForgeNet/CartLogistic_backend/blob/5a7ab0da1e4895efdf24ee1af59240dae4cfe18b/tests/simulationService.test.js)]
+## tests/simulationService.test.js [[link](https://github.com/CodeForgeNet/CartLogistic_backend/blob/87beaf137159c1fea7490565d96d95e9b87fe046/tests/simulationService.test.js)]
 
-7 passed, 0 failed, 0 todo, done in 0.171 s
+7 passed, 0 failed, 0 todo, done in 0.091 s
 
 - :white_check_mark: Simulation Logic Tests
   - :white_check_mark: Traffic time multipliers should be correct
