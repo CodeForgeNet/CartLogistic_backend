@@ -1,9 +1,7 @@
-// /Users/karansingh/Desktop/GreenCart Logistics/backend/controllers/orderController.js
 const Order = require("../models/Order");
 const Route = require("../models/Route");
 const Joi = require("joi");
 
-// Validation schema
 const orderSchema = Joi.object({
   orderId: Joi.string().required(),
   valueRs: Joi.number().positive().required(),
@@ -12,9 +10,6 @@ const orderSchema = Joi.object({
   status: Joi.string().valid("Pending", "Delivered"),
 });
 
-// @desc    Get all orders
-// @route   GET /api/orders
-// @access  Private
 exports.getOrders = async (req, res) => {
   try {
     const orders = await Order.find();
@@ -25,9 +20,6 @@ exports.getOrders = async (req, res) => {
   }
 };
 
-// @desc    Get order by ID
-// @route   GET /api/orders/:id
-// @access  Private
 exports.getOrderById = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
@@ -41,12 +33,8 @@ exports.getOrderById = async (req, res) => {
   }
 };
 
-// @desc    Create an order
-// @route   POST /api/orders
-// @access  Private
 exports.createOrder = async (req, res) => {
   try {
-    // Validate input
     const { error, value } = orderSchema.validate(req.body);
     if (error) {
       return res
@@ -54,13 +42,11 @@ exports.createOrder = async (req, res) => {
         .json({ error: "Validation failed", details: error.details });
     }
 
-    // Check if route exists
     const route = await Route.findOne({ routeId: value.assignedRouteId });
     if (!route) {
       return res.status(400).json({ error: "Assigned route does not exist" });
     }
 
-    // Check for duplicate orderId
     const existingOrder = await Order.findOne({ orderId: value.orderId });
     if (existingOrder) {
       return res
@@ -77,12 +63,8 @@ exports.createOrder = async (req, res) => {
   }
 };
 
-// @desc    Update an order
-// @route   PUT /api/orders/:id
-// @access  Private
 exports.updateOrder = async (req, res) => {
   try {
-    // Validate input
     const { error, value } = orderSchema.validate(req.body);
     if (error) {
       return res
@@ -90,7 +72,6 @@ exports.updateOrder = async (req, res) => {
         .json({ error: "Validation failed", details: error.details });
     }
 
-    // Check if route exists
     if (value.assignedRouteId) {
       const route = await Route.findOne({ routeId: value.assignedRouteId });
       if (!route) {
@@ -98,7 +79,6 @@ exports.updateOrder = async (req, res) => {
       }
     }
 
-    // Check for duplicate orderId if changed
     if (value.orderId) {
       const order = await Order.findById(req.params.id);
       if (!order) {
@@ -128,9 +108,6 @@ exports.updateOrder = async (req, res) => {
   }
 };
 
-// @desc    Delete an order
-// @route   DELETE /api/orders/:id
-// @access  Private
 exports.deleteOrder = async (req, res) => {
   try {
     const order = await Order.findByIdAndDelete(req.params.id);

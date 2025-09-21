@@ -1,5 +1,3 @@
-// scripts/seed.js
-// Run with: node scripts/seed.js
 require("dotenv").config();
 const mongoose = require("mongoose");
 const csv = require("csvtojson");
@@ -22,7 +20,6 @@ async function seed() {
     if (error.code === 26) {
       console.log("Drivers collection did not exist, skipping drop.");
     } else {
-      // For any other error, we should probably stop the script
       throw error;
     }
   }
@@ -32,13 +29,12 @@ async function seed() {
   await Route.deleteMany({});
   await Order.deleteMany({});
 
-  // Check if we have a manager user, create if not
   const adminExists = await User.findOne({ role: "admin" });
   if (!adminExists) {
     console.log("Creating default admin user...");
     await User.create({
       email: "admin@logistics.com",
-      password: "admin123", // Will be hashed by the schema pre-save hook
+      password: "admin123",
       name: "Mai Admin hu",
       role: "admin",
     });
@@ -46,17 +42,12 @@ async function seed() {
   }
 
   console.log("Reading CSV files...");
-  // Sample data for testing if CSV files don't exist
-  // In a real project, you would have actual CSV files
-
-  // Create data directory if it doesn't exist
   const fs = require("fs");
   const dataDir = path.join(__dirname, "../data");
   if (!fs.existsSync(dataDir)) {
     fs.mkdirSync(dataDir);
   }
 
-  // Check if CSV files exist, if not create sample ones
   const driversPath = path.join(dataDir, "drivers.csv");
   const routesPath = path.join(dataDir, "routes.csv");
   const ordersPath = path.join(dataDir, "orders.csv");
@@ -108,7 +99,6 @@ async function seed() {
 
   console.log("Inserting data into MongoDB...");
 
-  // Ensure numeric fields converted
   await Driver.insertMany(
     drivers.map((d) => ({
       name: d.name,
@@ -118,7 +108,6 @@ async function seed() {
         .filter(Boolean)
         .map(Number),
       email: d.email,
-      // isActive: d.isActive === "true", // Removed this line
     }))
   );
 
@@ -137,7 +126,6 @@ async function seed() {
       if (o.delivery_time) {
         const today = new Date();
         const [hours, minutes] = o.delivery_time.split(":").map(Number);
-        // Set the time from the CSV on today's date
         today.setHours(hours, minutes, 0, 0);
         deliveryTimestamp = today;
       }

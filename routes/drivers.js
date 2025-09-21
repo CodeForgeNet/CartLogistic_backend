@@ -1,11 +1,9 @@
-// routes/drivers.js
 const express = require("express");
 const router = express.Router();
 const Driver = require("../models/Driver");
 const auth = require("../middleware/auth");
 const Joi = require("joi");
 
-// Validation schema
 const driverSchema = Joi.object({
   name: Joi.string().required(),
   email: Joi.string().email().allow(""),
@@ -14,7 +12,6 @@ const driverSchema = Joi.object({
   isActive: Joi.boolean(),
 });
 
-// Get all drivers
 router.get("/", auth, async (req, res) => {
   try {
     const drivers = await Driver.find();
@@ -25,7 +22,6 @@ router.get("/", auth, async (req, res) => {
   }
 });
 
-// Get driver by ID
 router.get("/:id", auth, async (req, res) => {
   try {
     const driver = await Driver.findById(req.params.id);
@@ -39,10 +35,8 @@ router.get("/:id", auth, async (req, res) => {
   }
 });
 
-// Create driver
 router.post("/", auth, async (req, res) => {
   try {
-    // Validate input
     const { error, value } = driverSchema.validate(req.body);
     if (error) {
       return res
@@ -59,10 +53,8 @@ router.post("/", auth, async (req, res) => {
   }
 });
 
-// Update driver
 router.put("/:id", auth, async (req, res) => {
   try {
-    // Validate input
     const { error, value } = driverSchema.validate(req.body);
     if (error) {
       return res
@@ -83,7 +75,6 @@ router.put("/:id", auth, async (req, res) => {
   }
 });
 
-// Delete driver
 router.delete("/:id", auth, async (req, res) => {
   try {
     const driver = await Driver.findByIdAndDelete(req.params.id);

@@ -1,8 +1,6 @@
-// /Users/karansingh/Desktop/GreenCart Logistics/backend/controllers/driverController.js
 const Driver = require("../models/Driver");
 const Joi = require("joi");
 
-// Validation schema
 const driverSchema = Joi.object({
   name: Joi.string().required(),
   email: Joi.string().email().allow(""),
@@ -11,12 +9,9 @@ const driverSchema = Joi.object({
   isActive: Joi.boolean(),
 });
 
-// @desc    Get all drivers
-// @route   GET /api/drivers
-// @access  Private
 exports.getDrivers = async (req, res) => {
   try {
-    const drivers = await Driver.find().sort({ _id: -1 }); // Sort by _id in descending order
+    const drivers = await Driver.find().sort({ _id: -1 });
     res.json(drivers);
   } catch (err) {
     console.error("Get drivers error:", err);
@@ -24,9 +19,6 @@ exports.getDrivers = async (req, res) => {
   }
 };
 
-// @desc    Get driver by ID
-// @route   GET /api/drivers/:id
-// @access  Private
 exports.getDriverById = async (req, res) => {
   try {
     const driver = await Driver.findById(req.params.id);
@@ -40,12 +32,8 @@ exports.getDriverById = async (req, res) => {
   }
 };
 
-// @desc    Create a driver
-// @route   POST /api/drivers
-// @access  Private
 exports.createDriver = async (req, res) => {
   try {
-    // Validate input
     const { error, value } = driverSchema.validate(req.body);
     if (error) {
       return res
@@ -62,12 +50,8 @@ exports.createDriver = async (req, res) => {
   }
 };
 
-// @desc    Update a driver
-// @route   PUT /api/drivers/:id
-// @access  Private
 exports.updateDriver = async (req, res) => {
   try {
-    // Validate input
     const { error, value } = driverSchema.validate(req.body);
     if (error) {
       return res
@@ -88,9 +72,6 @@ exports.updateDriver = async (req, res) => {
   }
 };
 
-// @desc    Delete a driver
-// @route   DELETE /api/drivers/:id
-// @access  Private
 exports.deleteDriver = async (req, res) => {
   try {
     const driver = await Driver.findByIdAndDelete(req.params.id);

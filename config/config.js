@@ -1,7 +1,5 @@
-// /Users/karansingh/Desktop/GreenCart Logistics/backend/config/config.js
 const dotenv = require("dotenv");
 
-// Load env vars
 dotenv.config();
 
 module.exports = {

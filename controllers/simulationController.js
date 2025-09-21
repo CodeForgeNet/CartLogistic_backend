@@ -1,24 +1,18 @@
-// /Users/karansingh/Desktop/GreenCart Logistics/backend/controllers/simulationController.js
 const Driver = require("../models/Driver");
 const Route = require("../models/Route");
 const Order = require("../models/Order");
 const SimulationResult = require("../models/SimulationResult");
 
-// Helper function for traffic time multiplier
 function trafficTimeMultiplier(level) {
-  if (level === "High") return 0.25; // +25% time
-  if (level === "Medium") return 0.1; // +10% time
-  return 0; // Low
+  if (level === "High") return 0.25;
+  if (level === "Medium") return 0.1;
+  return 0;
 }
 
-// @desc    Run simulation
-// @route   POST /api/simulate
-// @access  Private
 exports.runSimulation = async (req, res) => {
   try {
     const { numberOfDrivers, routeStartTime, maxHoursPerDriver } = req.body;
 
-    // Validate required parameters
     if (!numberOfDrivers || !routeStartTime || !maxHoursPerDriver) {
       return res.status(400).json({ error: "Missing parameters" });
     }
@@ -26,7 +20,6 @@ exports.runSimulation = async (req, res) => {
       return res.status(400).json({ error: "Invalid params" });
     }
 
-    // Fetch drivers and data
     const driversAll = await Driver.find({ isActive: true }).limit(
       numberOfDrivers
     );
@@ -38,11 +31,10 @@ exports.runSimulation = async (req, res) => {
     const routesMap = {};
     routes.forEach((r) => (routesMap[r.routeId] = r));
 
-    const orders = await Order.find({}); // use all orders in dataset
-    // Simple ordering strategy: highest value first (prioritize high value)
+    const orders = await Order.find({});
+
     orders.sort((a, b) => b.valueRs - a.valueRs);
 
-    // Init drivers states
     const drivers = driversAll.map((d) => ({
       _id: d._id.toString(),
       name: d.name,
@@ -61,7 +53,6 @@ exports.runSimulation = async (req, res) => {
     let totalDeliveries = 0;
     const fuelCostBreakdown = { Low: 0, Medium: 0, High: 0 };
 
-    // Helper to pick driver with lowest assignedMinutes
     function pickDriver() {
       drivers.sort((a, b) => a.assignedMinutes - b.assignedMinutes);
       return drivers[0];
@@ -75,25 +66,20 @@ exports.runSimulation = async (req, res) => {
         continue;
       }
 
-      // Compute time multiplier from traffic
       const trafficMult = trafficTimeMultiplier(route.trafficLevel);
 
-      // Driver fatigue: if driver was fatigued yesterday, their speed decreases by 30% → time increases 30%
       const driver = pickDriver();
       const fatigueMultiplier = driver.wasFatiguedYesterday ? 1.3 : 1.0;
 
       const baseTime = Number(route.baseTimeMinutes);
-      const timeToDeliver = baseTime * (1 + trafficMult) * fatigueMultiplier; // minutes
+      const timeToDeliver = baseTime * (1 + trafficMult) * fatigueMultiplier;
 
-      // Late penalty rule: if timeToDeliver > baseTime + 10 mins => penalty Rs 50
       const penalty = timeToDeliver > baseTime + 10 ? 50 : 0;
       const onTime = penalty === 0;
       if (onTime) onTimeCount++;
 
-      // High-value bonus
       const bonus = order.valueRs > 1000 && onTime ? 0.1 * order.valueRs : 0;
 
-      // Fuel cost
       const baseFuelPerKm = 5;
       const trafficSurchargePerKm = route.trafficLevel === "High" ? 2 : 0;
       const fuelCost =
@@ -103,7 +89,6 @@ exports.runSimulation = async (req, res) => {
       const orderProfit = order.valueRs + bonus - penalty - fuelCost;
       totalProfit += orderProfit;
 
-      // Assign minutes to driver (round up)
       driver.assignedMinutes += Math.ceil(timeToDeliver);
       driver.assignedOrders.push(order.orderId);
 
@@ -136,7 +121,6 @@ exports.runSimulation = async (req, res) => {
       perOrder,
     };
 
-    // Persist simulation result
     await SimulationResult.create(result);
 
     return res.json(result);
@@ -146,9 +130,6 @@ exports.runSimulation = async (req, res) => {
   }
 };
 
-// @desc    Get latest simulation
-// @route   GET /api/simulate/latest
-// @access  Private
 exports.getLatestSimulation = async (req, res) => {
   try {
     const latest = await SimulationResult.findOne().sort({ createdAt: -1 });
@@ -162,9 +143,6 @@ exports.getLatestSimulation = async (req, res) => {
   }
 };
 
-// @desc    Get all simulations
-// @route   GET /api/simulate
-// @access  Private
 exports.getSimulations = async (req, res) => {
   try {
     const simulations = await SimulationResult.find()

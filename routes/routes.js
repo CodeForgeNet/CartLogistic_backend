@@ -1,11 +1,9 @@
-// routes/routes.js
 const express = require("express");
 const router = express.Router();
 const Route = require("../models/Route");
 const auth = require("../middleware/auth");
 const Joi = require("joi");
 
-// Validation schema
 const createRouteSchema = Joi.object({
   routeId: Joi.string().required(),
   distanceKm: Joi.number().positive().required(),
@@ -20,7 +18,6 @@ const updateRouteSchema = Joi.object({
   baseTimeMinutes: Joi.number().positive().optional(),
 });
 
-// Get all routes
 router.get("/", auth, async (req, res) => {
   try {
     const routes = await Route.find();
@@ -31,7 +28,6 @@ router.get("/", auth, async (req, res) => {
   }
 });
 
-// Get route by ID
 router.get("/:id", auth, async (req, res) => {
   try {
     const route = await Route.findById(req.params.id);
@@ -45,10 +41,8 @@ router.get("/:id", auth, async (req, res) => {
   }
 });
 
-// Create route
 router.post("/", auth, async (req, res) => {
   try {
-    // Validate input
     const { error, value } = createRouteSchema.validate(req.body);
     if (error) {
       return res
@@ -56,7 +50,6 @@ router.post("/", auth, async (req, res) => {
         .json({ error: "Validation failed", details: error.details });
     }
 
-    // Check for duplicate routeId
     const existingRoute = await Route.findOne({ routeId: value.routeId });
     if (existingRoute) {
       return res
@@ -73,10 +66,8 @@ router.post("/", auth, async (req, res) => {
   }
 });
 
-// Update route
 router.put("/:id", auth, async (req, res) => {
   try {
-    // Validate input
     const { error, value } = updateRouteSchema.validate(req.body);
     if (error) {
       return res
@@ -84,7 +75,6 @@ router.put("/:id", auth, async (req, res) => {
         .json({ error: "Validation failed", details: error.details });
     }
 
-    // Filter out undefined values from 'value' to prevent Mongoose from trying to set required fields to undefined
     const updateFields = {};
     for (const key in value) {
       if (value[key] !== undefined) {
@@ -92,7 +82,6 @@ router.put("/:id", auth, async (req, res) => {
       }
     }
 
-    // Check for duplicate routeId if changed
     if (updateFields.routeId) {
       const route = await Route.findById(req.params.id);
       if (!route) {
@@ -100,7 +89,9 @@ router.put("/:id", auth, async (req, res) => {
       }
 
       if (route.routeId !== updateFields.routeId) {
-        const existingRoute = await Route.findOne({ routeId: updateFields.routeId });
+        const existingRoute = await Route.findOne({
+          routeId: updateFields.routeId,
+        });
         if (existingRoute) {
           return res
             .status(400)
@@ -111,7 +102,7 @@ router.put("/:id", auth, async (req, res) => {
 
     const route = await Route.findByIdAndUpdate(req.params.id, updateFields, {
       new: true,
-      runValidators: true, // Ensure Mongoose schema validators run on updated fields
+      runValidators: true,
     });
     if (!route) {
       return res.status(404).json({ error: "Route not found" });
@@ -123,7 +114,6 @@ router.put("/:id", auth, async (req, res) => {
   }
 });
 
-// Delete route
 router.delete("/:id", auth, async (req, res) => {
   try {
     const route = await Route.findByIdAndDelete(req.params.id);

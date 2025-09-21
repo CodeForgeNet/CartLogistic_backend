@@ -1,20 +1,15 @@
-// services/simulationService.js
-// Core simulation logic separated for testability
 function trafficTimeMultiplier(level) {
-  if (level === "High") return 0.25; // +25% time
-  if (level === "Medium") return 0.1; // +10% time
-  return 0; // Low
+  if (level === "High") return 0.25;
+  if (level === "Medium") return 0.1;
+  return 0;
 }
 
 function calculateSimulation(drivers, routes, orders, params) {
-  // Simple ordering strategy: highest value first (prioritize high value)
   const sortedOrders = [...orders].sort((a, b) => b.valueRs - a.valueRs);
 
-  // Convert routes array to map for quick lookup
   const routesMap = {};
   routes.forEach((r) => (routesMap[r.routeId] = r));
 
-  // init drivers states
   const simulationDrivers = drivers
     .slice(0, params.numberOfDrivers)
     .map((d) => ({
@@ -35,7 +30,6 @@ function calculateSimulation(drivers, routes, orders, params) {
   let totalDeliveries = 0;
   const fuelCostBreakdown = { Low: 0, Medium: 0, High: 0 };
 
-  // helper to pick driver with lowest assignedMinutes
   function pickDriver() {
     simulationDrivers.sort((a, b) => a.assignedMinutes - b.assignedMinutes);
     return simulationDrivers[0];
@@ -49,25 +43,20 @@ function calculateSimulation(drivers, routes, orders, params) {
       continue;
     }
 
-    // compute time multiplier from traffic
     const trafficMult = trafficTimeMultiplier(route.trafficLevel);
 
-    // driver fatigue: if driver was fatigued yesterday, their speed decreases by 30% → time increases 30%
     const driver = pickDriver();
     const fatigueMultiplier = driver.wasFatiguedYesterday ? 1.3 : 1.0;
 
     const baseTime = Number(route.baseTimeMinutes);
-    const timeToDeliver = baseTime * (1 + trafficMult) * fatigueMultiplier; // minutes
+    const timeToDeliver = baseTime * (1 + trafficMult) * fatigueMultiplier;
 
-    // Late penalty
     const penalty = timeToDeliver > baseTime + 10 ? 50 : 0;
     const onTime = penalty === 0;
     if (onTime) onTimeCount++;
 
-    // high-value bonus
     const bonus = order.valueRs > 1000 && onTime ? 0.1 * order.valueRs : 0;
 
-    // fuel cost
     const baseFuelPerKm = 5;
     const trafficSurchargePerKm = route.trafficLevel === "High" ? 2 : 0;
     const fuelCost = route.distanceKm * (baseFuelPerKm + trafficSurchargePerKm);
@@ -76,7 +65,6 @@ function calculateSimulation(drivers, routes, orders, params) {
     const orderProfit = order.valueRs + bonus - penalty - fuelCost;
     totalProfit += orderProfit;
 
-    // assign minutes to driver (round up)
     driver.assignedMinutes += Math.ceil(timeToDeliver);
     driver.assignedOrders.push(order.orderId);
 
