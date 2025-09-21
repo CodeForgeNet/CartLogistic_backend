@@ -59,7 +59,7 @@ function calculateSimulation(drivers, routes, orders, params) {
     const baseTime = Number(route.baseTimeMinutes);
     const timeToDeliver = baseTime * (1 + trafficMult) * fatigueMultiplier; // minutes
 
-    // late penalty rule: if timeToDeliver > baseTime + 10 mins => penalty Rs 50
+    // Late penalty
     const penalty = timeToDeliver > baseTime + 10 ? 50 : 0;
     const onTime = penalty === 0;
     if (onTime) onTimeCount++;

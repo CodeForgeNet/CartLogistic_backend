@@ -32,8 +32,9 @@ describe("Simulation Logic Tests", () => {
     });
     expect(resultOnTime.perOrder[0].penalty).toBe(0); // No penalty when on time
 
-    // Now increase base time to make it late
-    routes[0].baseTimeMinutes = 10; // This will make the delivery late (10 + 10 < actual delivery time)
+    // Now increase base time and traffic to make it late
+    routes[0].baseTimeMinutes = 60; 
+    routes[0].trafficLevel = "High";
     const resultLate = calculateSimulation(drivers, routes, orders, {
       numberOfDrivers: 1,
     });
