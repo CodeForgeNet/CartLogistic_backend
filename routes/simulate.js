@@ -2,19 +2,9 @@ const express = require("express");
 const router = express();
 const SimulationResult = require("../models/SimulationResult");
 const auth = require("../middleware/auth");
-const simulationService = require("../services/simulationService");
+const simulationController = require("../controllers/simulationController");
 
-router.post("/", auth, async (req, res) => {
-  try {
-    const result = await simulationService.runSimulation(req.body);
-    const simulation = new SimulationResult(result);
-    await simulation.save();
-    res.status(201).json(simulation);
-  } catch (err) {
-    console.error("Simulation error:", err);
-    res.status(500).json({ error: err.message });
-  }
-});
+router.post("/", auth, simulationController.runSimulation);
 
 router.get("/", auth, async (req, res) => {
   try {
