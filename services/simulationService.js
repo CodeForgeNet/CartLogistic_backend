@@ -4,7 +4,7 @@ function trafficTimeMultiplier(level) {
   return 0;
 }
 
-function calculateSimulation(drivers, routes, orders, params) {
+function runSimulation(drivers, routes, orders, params) {
   const sortedOrders = [...orders].sort((a, b) => b.valueRs - a.valueRs);
 
   const routesMap = {};
@@ -100,5 +100,5 @@ function calculateSimulation(drivers, routes, orders, params) {
 
 module.exports = {
   trafficTimeMultiplier,
-  calculateSimulation,
+  runSimulation,
 };
