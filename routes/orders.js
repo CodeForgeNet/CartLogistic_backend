@@ -6,13 +6,22 @@ const Route = require("../models/Route");
 const auth = require("../middleware/auth");
 const Joi = require("joi");
 
-// Validation schema
-const orderSchema = Joi.object({
+// Validation schema for creating an order
+const createOrderSchema = Joi.object({
   orderId: Joi.string().required(),
   valueRs: Joi.number().positive().required(),
   assignedRouteId: Joi.string().required(),
-  deliveryTimestamp: Joi.date().allow(null),
-  status: Joi.string().valid("Pending", "Delivered"),
+  deliveryTimestamp: Joi.date().allow(null).optional(), // Optional for creation if not provided
+  status: Joi.string().valid("Pending", "Delivered").optional(), // Optional for creation if not provided
+});
+
+// Validation schema for updating an order (all fields optional)
+const updateOrderSchema = Joi.object({
+  orderId: Joi.string().optional(),
+  valueRs: Joi.number().positive().optional(),
+  assignedRouteId: Joi.string().optional(),
+  deliveryTimestamp: Joi.date().allow(null).optional(),
+  status: Joi.string().valid("Pending", "Delivered").optional(),
 });
 
 // Get all orders
@@ -43,8 +52,8 @@ router.get("/:id", auth, async (req, res) => {
 // Create order
 router.post("/", auth, async (req, res) => {
   try {
-    // Validate input
-    const { error, value } = orderSchema.validate(req.body);
+    // Validate input using create schema
+    const { error, value } = createOrderSchema.validate(req.body);
     if (error) {
       return res
         .status(400)
@@ -77,31 +86,39 @@ router.post("/", auth, async (req, res) => {
 // Update order
 router.put("/:id", auth, async (req, res) => {
   try {
-    // Validate input
-    const { error, value } = orderSchema.validate(req.body);
+    // Validate input using update schema
+    const { error, value } = updateOrderSchema.validate(req.body);
     if (error) {
       return res
         .status(400)
         .json({ error: "Validation failed", details: error.details });
     }
 
+    // Filter out undefined values from 'value' to prevent Mongoose from trying to set required fields to undefined
+    const updateFields = {};
+    for (const key in value) {
+      if (value[key] !== undefined) {
+        updateFields[key] = value[key];
+      }
+    }
+
     // Check if route exists
-    if (value.assignedRouteId) {
-      const route = await Route.findOne({ routeId: value.assignedRouteId });
+    if (updateFields.assignedRouteId) {
+      const route = await Route.findOne({ routeId: updateFields.assignedRouteId });
       if (!route) {
         return res.status(400).json({ error: "Assigned route does not exist" });
       }
     }
 
     // Check for duplicate orderId if changed
-    if (value.orderId) {
+    if (updateFields.orderId) {
       const order = await Order.findById(req.params.id);
       if (!order) {
         return res.status(404).json({ error: "Order not found" });
       }
 
-      if (order.orderId !== value.orderId) {
-        const existingOrder = await Order.findOne({ orderId: value.orderId });
+      if (order.orderId !== updateFields.orderId) {
+        const existingOrder = await Order.findOne({ orderId: updateFields.orderId });
         if (existingOrder) {
           return res
             .status(400)
@@ -110,8 +127,9 @@ router.put("/:id", auth, async (req, res) => {
       }
     }
 
-    const order = await Order.findByIdAndUpdate(req.params.id, value, {
+    const order = await Order.findByIdAndUpdate(req.params.id, updateFields, {
       new: true,
+      runValidators: true, // Ensure Mongoose schema validators run on updated fields
     });
     if (!order) {
       return res.status(404).json({ error: "Order not found" });

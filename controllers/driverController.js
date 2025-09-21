@@ -16,7 +16,7 @@ const driverSchema = Joi.object({
 // @access  Private
 exports.getDrivers = async (req, res) => {
   try {
-    const drivers = await Driver.find();
+    const drivers = await Driver.find().sort({ _id: -1 }); // Sort by _id in descending order
     res.json(drivers);
   } catch (err) {
     console.error("Get drivers error:", err);

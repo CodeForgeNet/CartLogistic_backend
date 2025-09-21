@@ -39,7 +39,7 @@ async function seed() {
     await User.create({
       email: "admin@logistics.com",
       password: "admin123", // Will be hashed by the schema pre-save hook
-      name: "Admin User",
+      name: "Mai Admin hu",
       role: "admin",
     });
     console.log("Default admin created");
@@ -136,7 +136,7 @@ async function seed() {
       let deliveryTimestamp = null;
       if (o.delivery_time) {
         const today = new Date();
-        const [hours, minutes] = o.delivery_time.split(':').map(Number);
+        const [hours, minutes] = o.delivery_time.split(":").map(Number);
         // Set the time from the CSV on today's date
         today.setHours(hours, minutes, 0, 0);
         deliveryTimestamp = today;

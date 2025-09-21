@@ -6,11 +6,18 @@ const auth = require("../middleware/auth");
 const Joi = require("joi");
 
 // Validation schema
-const routeSchema = Joi.object({
+const createRouteSchema = Joi.object({
   routeId: Joi.string().required(),
   distanceKm: Joi.number().positive().required(),
   trafficLevel: Joi.string().valid("Low", "Medium", "High").required(),
   baseTimeMinutes: Joi.number().positive().required(),
+});
+
+const updateRouteSchema = Joi.object({
+  routeId: Joi.string().optional(), // routeId is optional for updates
+  distanceKm: Joi.number().positive().optional(),
+  trafficLevel: Joi.string().valid("Low", "Medium", "High").optional(),
+  baseTimeMinutes: Joi.number().positive().optional(),
 });
 
 // Get all routes
@@ -42,7 +49,7 @@ router.get("/:id", auth, async (req, res) => {
 router.post("/", auth, async (req, res) => {
   try {
     // Validate input
-    const { error, value } = routeSchema.validate(req.body);
+    const { error, value } = createRouteSchema.validate(req.body);
     if (error) {
       return res
         .status(400)
@@ -70,22 +77,30 @@ router.post("/", auth, async (req, res) => {
 router.put("/:id", auth, async (req, res) => {
   try {
     // Validate input
-    const { error, value } = routeSchema.validate(req.body);
+    const { error, value } = updateRouteSchema.validate(req.body);
     if (error) {
       return res
         .status(400)
         .json({ error: "Validation failed", details: error.details });
     }
 
+    // Filter out undefined values from 'value' to prevent Mongoose from trying to set required fields to undefined
+    const updateFields = {};
+    for (const key in value) {
+      if (value[key] !== undefined) {
+        updateFields[key] = value[key];
+      }
+    }
+
     // Check for duplicate routeId if changed
-    if (value.routeId) {
+    if (updateFields.routeId) {
       const route = await Route.findById(req.params.id);
       if (!route) {
         return res.status(404).json({ error: "Route not found" });
       }
 
-      if (route.routeId !== value.routeId) {
-        const existingRoute = await Route.findOne({ routeId: value.routeId });
+      if (route.routeId !== updateFields.routeId) {
+        const existingRoute = await Route.findOne({ routeId: updateFields.routeId });
         if (existingRoute) {
           return res
             .status(400)
@@ -94,8 +109,9 @@ router.put("/:id", auth, async (req, res) => {
       }
     }
 
-    const route = await Route.findByIdAndUpdate(req.params.id, value, {
+    const route = await Route.findByIdAndUpdate(req.params.id, updateFields, {
       new: true,
+      runValidators: true, // Ensure Mongoose schema validators run on updated fields
     });
     if (!route) {
       return res.status(404).json({ error: "Route not found" });
